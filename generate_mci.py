@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import subprocess
 import tensorflow as tf
 from single_view_mpi.libs import mpi
 from single_view_mpi.libs import nets
@@ -78,7 +79,7 @@ def load_model():
 
     return model
 
-def generate(model, input_path, output_path, output_width, output_height, build_atlas=True):
+def generate(model, input_path, output_path, output_width, output_height, build_atlas=True, videoOutput=False):
     """ Generate multi-cylinder images from input images.
         Arguments:
             - model: MPI Keras model
@@ -91,6 +92,7 @@ def generate(model, input_path, output_path, output_width, output_height, build_
     # Get depths of MCI layers
     depths = mpi.make_depths(1.0, 100.0, 32).numpy()
 
+    print("process: " + input_path)
     # Get paths to images
     if os.path.isdir(input_path):
         paths = sorted(glob.glob(os.path.join(args.input,'*.png')))
@@ -163,6 +165,17 @@ def generate(model, input_path, output_path, output_width, output_height, build_
                     n = n + 1
             imwrite(os.path.join(my_output_path,'atlas.png'),atlas)
 
+        if videoOutput:
+            #os.makedirs(os.path.dirname(dest_fpath), exist_ok=True)
+            filename = os.path.join(my_output_path,'atlas.png')
+            purefileName = os.path.basename(path).split('/')[0]
+            filenameNew = os.path.join(output_path, purefileName)
+            print (filename + ", " + filenameNew)
+            shutil.copyfile(filename, filenameNew)
+            #subprocess.call(['ffmpeg', '-y', '-r', '30', '-i', 'bike%06d.png','-c:v', 'prores_ks', '-profile:v', '4', '-pix_fmt', 'yuva444p10le', 'tmp.mov'])
+            #subprocess.call('ffmpeg -i tmp.mov -vf unpremultiply=inplace=1 -c:v libvpx-vp9 -b:v 0 -crf 31 bike5.webm', shell=True)
+
+
 if __name__ == '__main__':
     from argparse import ArgumentParser
     import glob
@@ -184,6 +197,8 @@ if __name__ == '__main__':
     parser.add_argument('--output', '-o',
                         required=True,
                         help='output directory')
+    parser.add_argument('--videoOutput', '-v', required=False, help='output a video from input')
+
     parser.add_argument('--showWeb', '-s', required=False, help='show website')
 
     args = parser.parse_args()
@@ -194,7 +209,7 @@ if __name__ == '__main__':
     # Load Keras model
     model = load_model()
 
-    generate(model=model, input_path=args.input, output_path=args.output, build_atlas=True, output_width=args.width, output_height=args.height)
+    generate(model=model, input_path=args.input, output_path=args.output, build_atlas=True, output_width=args.width, output_height=args.height, videoOutput=args.videoOutput)
 
     #show website optional
     if args.showWeb == "1":
