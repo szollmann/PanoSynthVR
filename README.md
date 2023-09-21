@@ -11,6 +11,8 @@ To create and activate the conda environment:
 Then run download_mpi.sh to get the MPI code and pre-trained weights.
 
 
+# Running the MCI creation
+
 Run MCI generation only
 ```
   python generate_mci.py --input example.jpg --width 2048 --height 1024 --o outputfolder
@@ -29,3 +31,8 @@ Run MCI generation on a video (folder of png images) and convert to a webm video
     ffmpeg -i tmp.mov -vf unpremultiply=inplace=1 -c:v libvpx-vp9 -b:v 0 -crf 31 myMPIVideoName.webm
 
 ```
+
+The webm video can then be loaded into any capable MPI video renderer: for instance 
+https://github.com/szollmann/PanoMPIVideo
+
+
